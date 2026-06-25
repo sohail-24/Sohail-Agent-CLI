@@ -7,6 +7,9 @@ from .k8s_agent import K8sAgent
 from .cicd_agent import CicdAgent
 from .docs_agent import DocsAgent
 from .interview_agent import InterviewAgent
+from .planning_agent import PlanningAgent
+from .bootstrap_agent import BootstrapAgent
+from .stack_agent import StackAgent
 
 __all__ = [
     "BaseAgent",
@@ -17,4 +20,7 @@ __all__ = [
     "CicdAgent",
     "DocsAgent",
     "InterviewAgent",
+    "PlanningAgent",
+    "BootstrapAgent",
+    "StackAgent",
 ]

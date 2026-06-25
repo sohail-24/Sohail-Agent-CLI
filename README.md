@@ -12,6 +12,7 @@ Sohail-Agent-CLI is a CLI-first tool that helps developers:
 - **Generate CI/CD pipelines** - Set up GitHub Actions workflows
 - **Create documentation** - Generate professional README and deployment guides
 - **Prepare for interviews** - Generate project summaries and talking points
+- **Plan new projects** - Turn a project idea into persistent requirements, architecture, tasks, and decision records
 
 ## Why This Exists
 
@@ -91,6 +92,9 @@ sohail-agent docs ./my-project
 
 # Generate interview notes
 sohail-agent interview ./my-project
+
+# Plan a new project
+sohail-agent plan "Build an ecommerce platform"
 
 # Run all agents
 sohail-agent all ./my-project
@@ -181,6 +185,41 @@ Run all agents on the project.
 ```bash
 sohail-agent all [path]
 ```
+
+### `plan`
+
+Interactively clarify a new project idea and create a persistent planning package.
+
+```bash
+sohail-agent plan "Build an ecommerce platform"
+
+# Optional display name and output directory
+sohail-agent plan "Build an ecommerce platform" \
+  --project-name shopfront \
+  --output ./project-plan
+```
+
+**Generates:**
+
+- `project-plan/TASK.md`
+- `project-plan/ARCHITECTURE.md`
+- `project-plan/REQUIREMENTS.md`
+- confirmed decision records under `project-plan/decisions/`
+
+PlanningAgent V1 is deterministic and does not use Ollama, write application code,
+run shell commands, or bootstrap the project. It records unresolved choices as open
+questions rather than selecting hidden defaults.
+
+Global options must appear before the subcommand:
+
+```bash
+sohail-agent --dry-run plan "Build an ecommerce platform"
+sohail-agent --overwrite plan "Build an ecommerce platform"
+```
+
+Existing planning files are protected by default. With `--overwrite`, only
+`TASK.md`, `ARCHITECTURE.md`, and `REQUIREMENTS.md` may be replaced. Existing
+decision records are never overwritten by PlanningAgent V1.
 
 ## Supported Stacks
 

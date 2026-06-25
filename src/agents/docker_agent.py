@@ -50,13 +50,16 @@ class DockerAgent(BaseAgent):
         
         # Dockerfile
         dockerfile_path = path / "Dockerfile"
-        success, msg = await self.write_file(
+        success, msg, is_dry_run = await self.write_file(
             dockerfile_path,
             dockerfile,
             overwrite=overwrite,
         )
         if success:
-            self.success(msg)
+            if is_dry_run:
+                self.info(msg)
+            else:
+                self.success(msg)
             files_created.append(dockerfile_path)
         else:
             self.warning(msg)
@@ -64,13 +67,16 @@ class DockerAgent(BaseAgent):
         
         # .dockerignore
         dockerignore_path = path / ".dockerignore"
-        success, msg = await self.write_file(
+        success, msg, is_dry_run = await self.write_file(
             dockerignore_path,
             dockerignore,
             overwrite=overwrite,
         )
         if success:
-            self.success(msg)
+            if is_dry_run:
+                self.info(msg)
+            else:
+                self.success(msg)
             files_created.append(dockerignore_path)
         else:
             self.warning(msg)
@@ -78,13 +84,16 @@ class DockerAgent(BaseAgent):
         
         # docker-compose.yml
         compose_path = path / "docker-compose.yml"
-        success, msg = await self.write_file(
+        success, msg, is_dry_run = await self.write_file(
             compose_path,
             docker_compose,
             overwrite=overwrite,
         )
         if success:
-            self.success(msg)
+            if is_dry_run:
+                self.info(msg)
+            else:
+                self.success(msg)
             files_created.append(compose_path)
         else:
             self.warning(msg)

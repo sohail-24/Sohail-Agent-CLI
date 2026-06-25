@@ -10,12 +10,15 @@ from pathlib import Path
 from rich.console import Console
 
 from src.agents import (
+    BootstrapAgent,
     CicdAgent,
     DockerAgent,
     DocsAgent,
     InterviewAgent,
     K8sAgent,
+    PlanningAgent,
     RepoInspectorAgent,
+    StackAgent,
 )
 
 console = Console()
@@ -35,6 +38,8 @@ Examples:
   sohail-agent cicd ./my-project
   sohail-agent docs ./my-project
   sohail-agent interview ./my-project
+  sohail-agent plan "Build an ecommerce platform"
+  sohail-agent stack --plan-dir ./project-plan --output ./my-project
   sohail-agent all ./my-project
         """,
     )
@@ -159,6 +164,66 @@ Examples:
         nargs="?",
         default=".",
         help="Path to repository (default: current directory)",
+    )
+
+    # plan command
+    plan_parser = subparsers.add_parser(
+        "plan",
+        help="Create a persistent project planning package",
+    )
+    plan_parser.add_argument(
+        "goal",
+        help="Project goal to clarify and plan",
+    )
+    plan_parser.add_argument(
+        "--project-name",
+        type=str,
+        default=None,
+        help="Project display name",
+    )
+    plan_parser.add_argument(
+        "--output",
+        type=str,
+        default="./project-plan",
+        help="Planning package directory (default: ./project-plan)",
+    )
+
+        # bootstrap command
+    bootstrap_parser = subparsers.add_parser(
+        "bootstrap",
+        help="Generate a professional project scaffold from a planning package",
+    )
+
+    bootstrap_parser.add_argument(
+        "--plan-dir",
+        type=str,
+        default="./project-plan",
+        help="Planning package directory (default: ./project-plan)",
+    )
+
+    bootstrap_parser.add_argument(
+        "--output",
+        type=str,
+        default=".",
+        help="Output project directory (default: current directory)",
+    )
+
+    # stack command
+    stack_parser = subparsers.add_parser(
+        "stack",
+        help="Generate technology stack skeletons from a planning package",
+    )
+    stack_parser.add_argument(
+        "--plan-dir",
+        type=str,
+        default="./project-plan",
+        help="Planning package directory (default: ./project-plan)",
+    )
+    stack_parser.add_argument(
+        "--output",
+        type=str,
+        default=".",
+        help="Output project directory (default: current directory)",
     )
     
     # all command
@@ -298,6 +363,73 @@ async def cmd_interview(args: argparse.Namespace) -> int:
     return 0 if result.success else 1
 
 
+async def cmd_plan(args: argparse.Namespace) -> int:
+    """Execute the PlanningAgent V1 command through direct dispatch."""
+    if args.ollama:
+        console.print(
+            "[red]Error: PlanningAgent V1 does not use Ollama or other providers.[/red]"
+        )
+        return 1
+
+    output_path = Path(args.output)
+    agent = PlanningAgent(
+        dry_run=args.dry_run,
+        verbose=args.verbose,
+    )
+    result = await agent.execute(
+        output_path,
+        goal=args.goal,
+        project_name=args.project_name,
+        overwrite=args.overwrite,
+    )
+    return 0 if result.success else 1
+
+async def cmd_bootstrap(args: argparse.Namespace) -> int:
+    """Execute the BootstrapAgent."""
+
+    if args.ollama:
+        console.print(
+            "[red]Error: BootstrapAgent V1 does not use Ollama.[/red]"
+        )
+        return 1
+
+    plan_dir = Path(args.plan_dir)
+    output_dir = Path(args.output)
+
+    agent = BootstrapAgent(
+        dry_run=args.dry_run,
+        verbose=args.verbose,
+    )
+
+    result = await agent.execute(
+        plan_dir,
+        output_dir=output_dir,
+        overwrite=args.overwrite,
+    )
+
+    return 0 if result.success else 1
+
+
+async def cmd_stack(args: argparse.Namespace) -> int:
+    """Execute the StackAgent."""
+    if args.ollama:
+        console.print(
+            "[red]Error: StackGenerator V1 does not use Ollama or other providers.[/red]"
+        )
+        return 1
+
+    agent = StackAgent(
+        dry_run=args.dry_run,
+        verbose=args.verbose,
+    )
+    result = await agent.execute(
+        Path(args.plan_dir),
+        output_dir=Path(args.output),
+        overwrite=args.overwrite,
+    )
+    return 0 if result.success else 1
+
+
 async def cmd_all(args: argparse.Namespace) -> int:
     """Execute all commands."""
     path = Path(args.path).resolve()
@@ -358,6 +490,9 @@ async def main_async() -> int:
         "cicd": cmd_cicd,
         "docs": cmd_docs,
         "interview": cmd_interview,
+        "plan": cmd_plan,
+        "bootstrap": cmd_bootstrap,
+        "stack": cmd_stack,
         "all": cmd_all,
     }
     

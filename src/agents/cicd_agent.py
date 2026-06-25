@@ -54,13 +54,16 @@ class CicdAgent(BaseAgent):
         
         # ci.yml
         ci_path = workflows_dir / "ci.yml"
-        success, msg = await self.write_file(
+        success, msg, is_dry_run = await self.write_file(
             ci_path,
             ci,
             overwrite=overwrite,
         )
         if success:
-            self.success(msg)
+            if is_dry_run:
+                self.info(msg)
+            else:
+                self.success(msg)
             files_created.append(ci_path)
         else:
             self.warning(msg)
@@ -69,13 +72,16 @@ class CicdAgent(BaseAgent):
         # docker.yml (only if Dockerfile exists)
         if docker:
             docker_path = workflows_dir / "docker.yml"
-            success, msg = await self.write_file(
+            success, msg, is_dry_run = await self.write_file(
                 docker_path,
                 docker,
                 overwrite=overwrite,
             )
             if success:
-                self.success(msg)
+                if is_dry_run:
+                    self.info(msg)
+                else:
+                    self.success(msg)
                 files_created.append(docker_path)
             else:
                 self.warning(msg)
@@ -83,13 +89,16 @@ class CicdAgent(BaseAgent):
         
         # release.yml
         release_path = workflows_dir / "release.yml"
-        success, msg = await self.write_file(
+        success, msg, is_dry_run = await self.write_file(
             release_path,
             release,
             overwrite=overwrite,
         )
         if success:
-            self.success(msg)
+            if is_dry_run:
+                self.info(msg)
+            else:
+                self.success(msg)
             files_created.append(release_path)
         else:
             self.warning(msg)

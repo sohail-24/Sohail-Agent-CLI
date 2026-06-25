@@ -50,17 +50,20 @@ class InterviewAgent(BaseAgent):
         
         # Write file
         notes_path = path / "INTERVIEW_NOTES.md"
-        success, msg = await self.write_file(
+        success, msg, is_dry_run = await self.write_file(
             notes_path,
             notes,
             overwrite=overwrite,
         )
-        
+
         files_created = []
         files_skipped = []
-        
+
         if success:
-            self.success(msg)
+            if is_dry_run:
+                self.info(msg)
+            else:
+                self.success(msg)
             files_created.append(notes_path)
         else:
             self.warning(msg)

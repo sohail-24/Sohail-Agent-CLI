@@ -60,13 +60,16 @@ class DocsAgent(BaseAgent):
         
         # README.md
         readme_path = path / "README.md"
-        success, msg = await self.write_file(
+        success, msg, is_dry_run = await self.write_file(
             readme_path,
             readme,
             overwrite=overwrite,
         )
         if success:
-            self.success(msg)
+            if is_dry_run:
+                self.info(msg)
+            else:
+                self.success(msg)
             files_created.append(readme_path)
         else:
             self.warning(msg)
@@ -75,13 +78,16 @@ class DocsAgent(BaseAgent):
         # DEPLOYMENT.md
         if deployment:
             deployment_path = path / "DEPLOYMENT.md"
-            success, msg = await self.write_file(
+            success, msg, is_dry_run = await self.write_file(
                 deployment_path,
                 deployment,
                 overwrite=overwrite,
             )
             if success:
-                self.success(msg)
+                if is_dry_run:
+                    self.info(msg)
+                else:
+                    self.success(msg)
                 files_created.append(deployment_path)
             else:
                 self.warning(msg)
