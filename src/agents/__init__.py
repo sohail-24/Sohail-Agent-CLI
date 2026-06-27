@@ -8,6 +8,7 @@ from .cicd_agent import CicdAgent
 from .docs_agent import DocsAgent
 from .interview_agent import InterviewAgent
 from .planning_agent import PlanningAgent
+from .planning_agent_v2 import PlanningAgentV2
 from .bootstrap_agent import BootstrapAgent
 from .stack_agent import StackAgent
 from .specification_agent import SpecificationAgent
@@ -23,6 +24,7 @@ __all__ = [
     "DocsAgent",
     "InterviewAgent",
     "PlanningAgent",
+    "PlanningAgentV2",
     "BootstrapAgent",
     "StackAgent",
     "SpecificationAgent",

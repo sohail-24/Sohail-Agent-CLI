@@ -19,6 +19,7 @@ from src.agents import (
     InterviewAgent,
     K8sAgent,
     PlanningAgent,
+    PlanningAgentV2,
     RepoInspectorAgent,
     SpecificationAgent,
     StackAgent,
@@ -53,6 +54,7 @@ Examples:
   sohail-agent docs ./my-project
   sohail-agent interview ./my-project
   sohail-agent plan "Build an ecommerce platform"
+  sohail-agent plan-v2
   sohail-agent stack --plan-dir ./project-plan --output ./my-project
   sohail-agent specification --plan-dir ./project-plan --output ./specifications
   sohail-agent blueprint --plan-dir ./project-plan --spec-dir ./specifications --output ./blueprints
@@ -198,6 +200,30 @@ Examples:
         help="Project display name",
     )
     plan_parser.add_argument(
+        "--output",
+        type=str,
+        default="./project-plan",
+        help="Planning package directory (default: ./project-plan)",
+    )
+
+    # plan-v2 command
+    plan_v2_parser = subparsers.add_parser(
+        "plan-v2",
+        help="Create a planning package with the Engineering Decision Engine",
+    )
+    plan_v2_parser.add_argument(
+        "--goal",
+        type=str,
+        default=None,
+        help="Project goal to prefill before interactive decisions",
+    )
+    plan_v2_parser.add_argument(
+        "--project-name",
+        type=str,
+        default=None,
+        help="Project display name to prefill before interactive decisions",
+    )
+    plan_v2_parser.add_argument(
         "--output",
         type=str,
         default="./project-plan",
@@ -442,6 +468,28 @@ async def cmd_plan(args: argparse.Namespace) -> int:
     )
     return 0 if result.success else 1
 
+
+async def cmd_plan_v2(args: argparse.Namespace) -> int:
+    """Execute PlanningAgent V2 through the Engineering Decision Engine."""
+    if args.ollama:
+        console.print(
+            "[red]Error: PlanningAgent V2 does not use Ollama or other providers.[/red]"
+        )
+        return 1
+
+    agent = PlanningAgentV2(
+        dry_run=args.dry_run,
+        verbose=args.verbose,
+    )
+    result = await agent.execute(
+        Path(args.output),
+        goal=args.goal,
+        project_name=args.project_name,
+        overwrite=args.overwrite,
+    )
+    return 0 if result.success else 1
+
+
 async def cmd_bootstrap(args: argparse.Namespace) -> int:
     """Execute the BootstrapAgent."""
 
@@ -598,6 +646,7 @@ async def main_async() -> int:
         "docs": cmd_docs,
         "interview": cmd_interview,
         "plan": cmd_plan,
+        "plan-v2": cmd_plan_v2,
         "bootstrap": cmd_bootstrap,
         "stack": cmd_stack,
         "specification": cmd_specification,
