@@ -12,6 +12,7 @@ from rich.console import Console
 
 from src.agents import (
     BootstrapAgent,
+    BlueprintAgent,
     CicdAgent,
     DockerAgent,
     DocsAgent,
@@ -54,6 +55,7 @@ Examples:
   sohail-agent plan "Build an ecommerce platform"
   sohail-agent stack --plan-dir ./project-plan --output ./my-project
   sohail-agent specification --plan-dir ./project-plan --output ./specifications
+  sohail-agent blueprint --plan-dir ./project-plan --spec-dir ./specifications --output ./blueprints
   sohail-agent all ./my-project
         """,
     )
@@ -256,6 +258,30 @@ Examples:
         type=str,
         default="./specifications",
         help="Specification output directory (default: ./specifications)",
+    )
+
+    # blueprint command
+    blueprint_parser = subparsers.add_parser(
+        "blueprint",
+        help="Generate implementation blueprint files from planning and specification packages",
+    )
+    blueprint_parser.add_argument(
+        "--plan-dir",
+        type=str,
+        default="./project-plan",
+        help="Planning package directory (default: ./project-plan)",
+    )
+    blueprint_parser.add_argument(
+        "--spec-dir",
+        type=str,
+        default="./specifications",
+        help="Specification package directory (default: ./specifications)",
+    )
+    blueprint_parser.add_argument(
+        "--output",
+        type=str,
+        default="./blueprints",
+        help="Blueprint output directory (default: ./blueprints)",
     )
     
     # all command
@@ -477,6 +503,22 @@ async def cmd_specification(args: argparse.Namespace) -> int:
     return 0 if result.success else 1
 
 
+async def cmd_blueprint(args: argparse.Namespace) -> int:
+    """Execute the BlueprintAgent."""
+    agent = BlueprintAgent(
+        dry_run=args.dry_run,
+        verbose=args.verbose,
+    )
+    result = await agent.execute(
+        Path(args.plan_dir),
+        spec_dir=Path(args.spec_dir),
+        output_dir=Path(args.output),
+        overwrite=args.overwrite,
+    )
+
+    return 0 if result.success else 1
+
+
 async def cmd_all(args: argparse.Namespace) -> int:
     """Execute all commands."""
     path = Path(args.path).resolve()
@@ -559,6 +601,7 @@ async def main_async() -> int:
         "bootstrap": cmd_bootstrap,
         "stack": cmd_stack,
         "specification": cmd_specification,
+        "blueprint": cmd_blueprint,
         "all": cmd_all,
     }
     

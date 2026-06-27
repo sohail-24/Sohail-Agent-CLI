@@ -11,6 +11,7 @@ from .planning_agent import PlanningAgent
 from .bootstrap_agent import BootstrapAgent
 from .stack_agent import StackAgent
 from .specification_agent import SpecificationAgent
+from .blueprint_agent import BlueprintAgent
 
 __all__ = [
     "BaseAgent",
@@ -25,4 +26,5 @@ __all__ = [
     "BootstrapAgent",
     "StackAgent",
     "SpecificationAgent",
+    "BlueprintAgent",
 ]
