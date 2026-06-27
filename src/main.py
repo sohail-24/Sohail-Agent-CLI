@@ -6,6 +6,7 @@ import argparse
 import asyncio
 import sys
 from pathlib import Path
+from typing import Awaitable, Callable
 
 from rich.console import Console
 
@@ -18,10 +19,22 @@ from src.agents import (
     K8sAgent,
     PlanningAgent,
     RepoInspectorAgent,
+    SpecificationAgent,
     StackAgent,
 )
+from src.bootstrap.validator import PlanningValidationError
+from src.stack.loader import StackPlanError
 
 console = Console()
+
+CommandHandler = Callable[[argparse.Namespace], Awaitable[int]]
+EXPECTED_CLI_EXCEPTIONS = (
+    FileNotFoundError,
+    PermissionError,
+    ValueError,
+    PlanningValidationError,
+    StackPlanError,
+)
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -40,6 +53,7 @@ Examples:
   sohail-agent interview ./my-project
   sohail-agent plan "Build an ecommerce platform"
   sohail-agent stack --plan-dir ./project-plan --output ./my-project
+  sohail-agent specification --plan-dir ./project-plan --output ./specifications
   sohail-agent all ./my-project
         """,
     )
@@ -224,6 +238,24 @@ Examples:
         type=str,
         default=".",
         help="Output project directory (default: current directory)",
+    )
+
+    # specification command
+    specification_parser = subparsers.add_parser(
+        "specification",
+        help="Generate structured specification files from a planning package",
+    )
+    specification_parser.add_argument(
+        "--plan-dir",
+        type=str,
+        default="./project-plan",
+        help="Planning package directory (default: ./project-plan)",
+    )
+    specification_parser.add_argument(
+        "--output",
+        type=str,
+        default="./specifications",
+        help="Specification output directory (default: ./specifications)",
     )
     
     # all command
@@ -430,6 +462,21 @@ async def cmd_stack(args: argparse.Namespace) -> int:
     return 0 if result.success else 1
 
 
+async def cmd_specification(args: argparse.Namespace) -> int:
+    """Execute the SpecificationAgent."""
+    agent = SpecificationAgent(
+        dry_run=args.dry_run,
+        verbose=args.verbose,
+    )
+    result = await agent.execute(
+        Path(args.plan_dir),
+        output_dir=Path(args.output),
+        overwrite=args.overwrite,
+    )
+   
+    return 0 if result.success else 1
+
+
 async def cmd_all(args: argparse.Namespace) -> int:
     """Execute all commands."""
     path = Path(args.path).resolve()
@@ -474,6 +521,24 @@ async def cmd_all(args: argparse.Namespace) -> int:
     return 0
 
 
+async def run_command_safely(
+    command_func: CommandHandler,
+    args: argparse.Namespace,
+) -> int:
+    """Run a command and convert expected CLI failures into clean messages."""
+    try:
+        return await command_func(args)
+    except EXPECTED_CLI_EXCEPTIONS as exc:
+        console.print(f"[red]Error:[/red] {exc}")
+        return 1
+    except Exception as exc:
+        if getattr(args, "verbose", False):
+            raise
+        console.print(f"[red]Unexpected error:[/red] {exc}")
+        console.print("[dim]Run again with --verbose to see the full traceback.[/dim]")
+        return 1
+
+
 async def main_async() -> int:
     """Main async entry point."""
     parser = create_parser()
@@ -493,12 +558,13 @@ async def main_async() -> int:
         "plan": cmd_plan,
         "bootstrap": cmd_bootstrap,
         "stack": cmd_stack,
+        "specification": cmd_specification,
         "all": cmd_all,
     }
     
     command_func = commands.get(args.command)
     if command_func:
-        return await command_func(args)
+        return await run_command_safely(command_func, args)
     else:
         console.print(f"[red]Unknown command: {args.command}[/red]")
         return 1
@@ -506,7 +572,11 @@ async def main_async() -> int:
 
 def main() -> int:
     """Main entry point."""
-    return asyncio.run(main_async())
+    try:
+        return asyncio.run(main_async())
+    except KeyboardInterrupt:
+        console.print("[yellow]Cancelled by user.[/yellow]")
+        return 130
 
 
 if __name__ == "__main__":

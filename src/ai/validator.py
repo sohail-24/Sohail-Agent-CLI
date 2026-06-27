@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 from .exceptions import AIValidationError
@@ -22,8 +23,9 @@ class AIResponseValidator:
         if not text.strip():
             raise AIValidationError("AI response is empty")
 
+        json_text = self.extract_json_object_text(text)
         try:
-            data = json.loads(text)
+            data = json.loads(json_text)
         except json.JSONDecodeError as exc:
             raise AIValidationError(f"AI response is not valid JSON: {exc}") from exc
 
@@ -49,3 +51,75 @@ class AIResponseValidator:
                 raise AIValidationError(f"AI response field '{field}' cannot be empty")
 
         return data
+
+    def extract_json_object_text(self, text: str) -> str:
+        """
+        Extract a JSON object from provider text without inventing content.
+
+        Models may return fenced JSON, prefaces, or trailing explanations.
+        This method returns the first parseable JSON object string it can
+        recover, or the stripped input so the existing JSON validation error is
+        preserved.
+        """
+        stripped = text.strip()
+        if self._is_json_object(stripped):
+            return stripped
+
+        for fenced in self._fenced_json_candidates(stripped):
+            if self._is_json_object(fenced):
+                return fenced
+
+        balanced = self._first_balanced_object(stripped)
+        if balanced and self._is_json_object(balanced):
+            return balanced
+
+        return stripped
+
+    @staticmethod
+    def _fenced_json_candidates(text: str) -> list[str]:
+        return [
+            match.group(1).strip()
+            for match in re.finditer(
+                r"```(?:json|JSON)?\s*(.*?)```",
+                text,
+                flags=re.DOTALL,
+            )
+        ]
+
+    @staticmethod
+    def _is_json_object(text: str) -> bool:
+        try:
+            return isinstance(json.loads(text), dict)
+        except json.JSONDecodeError:
+            return False
+
+    @staticmethod
+    def _first_balanced_object(text: str) -> str | None:
+        start = text.find("{")
+        if start == -1:
+            return None
+
+        depth = 0
+        in_string = False
+        escape = False
+        for index in range(start, len(text)):
+            char = text[index]
+            if in_string:
+                if escape:
+                    escape = False
+                elif char == "\\":
+                    escape = True
+                elif char == '"':
+                    in_string = False
+                continue
+
+            if char == '"':
+                in_string = True
+            elif char == "{":
+                depth += 1
+            elif char == "}":
+                depth -= 1
+                if depth == 0:
+                    return text[start : index + 1]
+
+        return None

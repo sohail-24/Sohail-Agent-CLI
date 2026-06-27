@@ -65,7 +65,7 @@ class AIRequest:
         "entities",
     )
     model: str | None = None
-    max_retries: int = 2
+    max_retries: int = 1
 
 
 @dataclass(slots=True, frozen=True)

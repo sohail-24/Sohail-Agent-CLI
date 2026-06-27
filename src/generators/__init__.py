@@ -7,6 +7,7 @@ from .planning_generator import PlanningGenerator
 from .readme_generator import ReadmeGenerator
 from .bootstrap_generator import BootstrapGenerator
 from .stack_generator import StackGenerator
+from .specification_generator import SpecificationGenerator
 
 __all__ = [
     "DockerGenerator",
@@ -17,4 +18,5 @@ __all__ = [
     "ReadmeGenerator",
     "BootstrapGenerator",
     "StackGenerator",
+    "SpecificationGenerator",
 ]

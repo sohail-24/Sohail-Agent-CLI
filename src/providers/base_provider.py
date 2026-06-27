@@ -4,17 +4,22 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+import os
 from typing import Any, AsyncIterator
 
 
 @dataclass
 class ProviderConfig:
     """Configuration for an AI provider."""
-    base_url: str = "http://localhost:11434"
+    base_url: str = field(
+        default_factory=lambda: os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    )
     api_key: str | None = None
     timeout: float = 60.0
     max_retries: int = 3
-    default_model: str = "llama3.2"
+    default_model: str = field(
+        default_factory=lambda: os.getenv("OLLAMA_MODEL", "llama3.2")
+    )
     
     def to_dict(self) -> dict[str, Any]:
         """Convert config to dictionary."""
@@ -77,11 +82,11 @@ class GenerationResult:
         return self.error is None
     
     @classmethod
-    def error_result(cls, error: str) -> GenerationResult:
+    def error_result(cls, error: str, model: str = "") -> GenerationResult:
         """Create an error result."""
         return cls(
             text="",
-            model="",
+            model=model,
             error=error,
             done=True,
         )

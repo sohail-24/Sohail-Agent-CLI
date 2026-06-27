@@ -10,6 +10,7 @@ from .interview_agent import InterviewAgent
 from .planning_agent import PlanningAgent
 from .bootstrap_agent import BootstrapAgent
 from .stack_agent import StackAgent
+from .specification_agent import SpecificationAgent
 
 __all__ = [
     "BaseAgent",
@@ -23,4 +24,5 @@ __all__ = [
     "PlanningAgent",
     "BootstrapAgent",
     "StackAgent",
+    "SpecificationAgent",
 ]

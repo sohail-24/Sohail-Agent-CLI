@@ -14,6 +14,24 @@ def test_validator_accepts_valid_json_object():
 
 
 @pytest.mark.parametrize(
+    "text",
+    [
+        '{"kind":"planning","title":"Plan","summary":"Summary","items":[]}',
+        '```json\n{"kind":"planning","title":"Plan","summary":"Summary","items":[]}\n```',
+        'Here is the JSON:\n{"kind":"planning","title":"Plan","summary":"Summary","items":[]}\nThanks.',
+        '\n\n```JSON\n{"kind":"planning","title":"Plan","summary":"Summary","items":[]}\n```\n',
+    ],
+)
+def test_validator_recovers_json_objects_from_model_text(text):
+    data = AIResponseValidator().validate_json_object(
+        text,
+        required_fields=("kind", "title", "summary", "items"),
+        allowed_kinds=("planning",),
+    )
+    assert data["kind"] == "planning"
+
+
+@pytest.mark.parametrize(
     "text,match",
     [
         ("", "empty"),
