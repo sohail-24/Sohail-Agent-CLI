@@ -1,3 +1,243 @@
+# Sohail-Agent-CLI Documentation
+
+This document consolidates all usage, setup, and developer guidelines.
+
+---
+
+## Setup and Usage
+## Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/sohail-24/sohail-agent-cli.git
+cd sohail-agent-cli
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Or install as a package
+pip install -e .
+```
+
+### Requirements
+
+- Python 3.11+
+- Optional: Ollama for local AI features
+
+
+## Quick Start
+
+```bash
+# Inspect a repository
+sohail-agent inspect ./my-project
+
+# Generate Docker configuration
+sohail-agent dockerize ./my-project
+
+# Generate Kubernetes manifests
+sohail-agent k8s ./my-project
+
+# Generate CI/CD workflows
+sohail-agent cicd ./my-project
+
+# Generate documentation
+sohail-agent docs ./my-project
+
+# Generate interview notes
+sohail-agent interview ./my-project
+
+# Plan a new project
+sohail-agent plan "Build an ecommerce platform"
+
+# Run all agents
+sohail-agent all ./my-project
+```
+
+
+## Commands
+
+### `inspect`
+
+Analyze repository structure, detect tech stack, and assess deployment readiness.
+
+```bash
+sohail-agent inspect [path]
+```
+
+**Output:**
+- Technology stack detection
+- DevOps files status
+- Deployment readiness score (0-100)
+- Gaps and recommendations
+
+### `dockerize`
+
+Generate Docker configuration for the detected stack.
+
+```bash
+sohail-agent dockerize [path]
+```
+
+**Generates:**
+- `Dockerfile`
+- `.dockerignore`
+- `docker-compose.yml` (optional)
+
+### `k8s`
+
+Generate Kubernetes manifests.
+
+```bash
+sohail-agent k8s [path]
+```
+
+**Generates:**
+- `k8s/deployment.yaml`
+- `k8s/service.yaml`
+- `k8s/kustomization.yaml`
+
+### `cicd`
+
+Generate GitHub Actions workflows.
+
+```bash
+sohail-agent cicd [path]
+```
+
+**Generates:**
+- `.github/workflows/ci.yml`
+- `.github/workflows/docker.yml`
+- `.github/workflows/release.yml`
+
+### `docs`
+
+Generate project documentation.
+
+```bash
+sohail-agent docs [path]
+```
+
+**Generates:**
+- `README.md`
+- `DEPLOYMENT.md`
+
+### `interview`
+
+Generate interview-ready project summary.
+
+```bash
+sohail-agent interview [path]
+```
+
+**Generates:**
+- `INTERVIEW_NOTES.md`
+
+### `all`
+
+Run all agents on the project.
+
+```bash
+sohail-agent all [path]
+```
+
+### `plan`
+
+Interactively clarify a new project idea and create a persistent planning package.
+
+```bash
+sohail-agent plan "Build an ecommerce platform"
+
+# Optional display name and output directory
+sohail-agent plan "Build an ecommerce platform" \
+  --project-name shopfront \
+  --output ./project-plan
+```
+
+**Generates:**
+
+- `project-plan/TASK.md`
+- `project-plan/ARCHITECTURE.md`
+- `project-plan/REQUIREMENTS.md`
+- confirmed decision records under `project-plan/decisions/`
+
+PlanningAgent V1 is deterministic and does not use Ollama, write application code,
+run shell commands, or bootstrap the project. It records unresolved choices as open
+questions rather than selecting hidden defaults.
+
+Global options must appear before the subcommand:
+
+```bash
+sohail-agent --dry-run plan "Build an ecommerce platform"
+sohail-agent --overwrite plan "Build an ecommerce platform"
+```
+
+Existing planning files are protected by default. With `--overwrite`, only
+`TASK.md`, `ARCHITECTURE.md`, and `REQUIREMENTS.md` may be replaced. Existing
+decision records are never overwritten by PlanningAgent V1.
+
+
+## Supported Stacks
+
+| Stack | Inspect | Docker | K8s | CI/CD | Docs |
+|-------|---------|--------|-----|-------|------|
+| Python | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Django | ✅ | ✅ | ✅ | ✅ | ✅ |
+| FastAPI | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Flask | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Node.js | ✅ | ✅ | ✅ | ✅ | ✅ |
+| React | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Next.js | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Vue | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Go | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Rust | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Java | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Ruby/Rails | ✅ | ✅ | ✅ | ✅ | ✅ |
+| PHP/Laravel | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+
+## Ollama Integration
+
+The tool can use local AI models via Ollama for enhanced generation:
+
+```python
+from src.providers import OllamaProvider, ProviderConfig
+
+config = ProviderConfig(
+    base_url="http://localhost:11434",
+    default_model="llama3.2",
+)
+
+provider = OllamaProvider(config)
+```
+
+### Setting up Ollama
+
+1. Install Ollama: https://ollama.com
+2. Pull a model: `ollama pull llama3.2`
+3. The tool will automatically use Ollama when available
+
+
+## Safety Features
+
+- **Dry-run mode** - See what would change without making changes
+- **Safety levels** - Control what operations are allowed
+- **File overwrite protection** - Never overwrite without permission
+- **Blocked commands** - Dangerous shell commands are blocked
+
+
+## Testing
+
+```bash
+# Run all tests
+pytest tests/ -v
+
+# Run with coverage
+pytest --cov=src tests/
+```
+
+
+---
+
 # Sohail-Agent-CLI Developer Guide
 
 ## Architecture Rule
